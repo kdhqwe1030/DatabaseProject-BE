@@ -91,7 +91,92 @@ const searchClubMembers = (req, res) => {
     res.json(results);
   });
 };
+
+// const searchClubAdvisor = (req, res) => {
+//   const { club_name } = req.body;
+
+//   let query = `
+//     SELECT DISTINCT
+//       a.advisor_id,
+//       d.department_name,
+//       a.advisor_name,
+//       a.phone_number,
+//       a.lab_location,
+//       a.study_field
+//     FROM Advisor a
+//     JOIN Club c ON c.Eadvisor_id = a.advisor_id
+//     JOIN Department d ON a.Edepartment_id = d.department_id
+//     WHERE 1=1
+//   `;
+
+//   const params = [];
+
+//   if (club_name) {
+//     query += ' AND c.club_name LIKE ?';
+//     params.push(`%${club_name}%`);
+//   }
+
+//   query += ' ORDER BY a.advisor_id';
+
+//   console.log('Executing query:', query);
+//   console.log('Parameters:', params);
+
+//   db.query(query, params, (err, results) => {
+//     if (err) {
+//       console.error('Database error:', err);
+//       res.status(500).json({
+//         error: 'Database query failed',
+//         details: err.message,
+//       });
+//       return;
+//     }
+//     res.json(results);
+//   });
+// };
+const searchClubAdvisor = (req, res) => {
+  const { club_name } = req.body;
+
+  let query = `
+    SELECT DISTINCT
+      a.advisor_id,
+      d.department_name,
+      a.advisor_name, 
+      a.phone_number,
+      a.lab_location,
+      a.study_field,
+      c.club_name
+    FROM Advisor a
+    JOIN Club c ON c.Eadvisor_id = a.advisor_id  
+    JOIN Department d ON a.Edepartment_id = d.department_id
+    WHERE 1=1
+  `;
+
+  const params = [];
+
+  if (club_name) {
+    query += ' AND c.club_name LIKE ?';
+    params.push(`%${club_name}%`);
+  }
+
+  query += ' ORDER BY a.advisor_id';
+
+  console.log('Executing query:', query);
+  console.log('Parameters:', params);
+
+  db.query(query, params, (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      res.status(500).json({
+        error: 'Database query failed',
+        details: err.message,
+      });
+      return;
+    }
+    res.json(results);
+  });
+};
 module.exports = {
   searchClub,
   searchClubMembers,
+  searchClubAdvisor,
 };
