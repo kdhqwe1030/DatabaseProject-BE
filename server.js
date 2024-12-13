@@ -1,29 +1,17 @@
 const express = require('express');
-const mysql = require('mysql2');
+const cors = require('cors');
 require('dotenv').config({ path: './.env' });
 
 const app = express();
+const departmentRoutes = require('./src/routes/department');
+const clubRoutes = require('./src/routes/club');
+app.use(cors());
+app.use(express.json());
 
-// MySQL 연결 설정
-const db = mysql.createConnection({
-  port: process.env.PORT,
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  ssl: false,
-});
-
-// MySQL 연결
-db.connect((err) => {
-  if (err) {
-    console.error('MySQL 연결 실패:', err);
-  } else {
-    console.log('MySQL에 연결되었습니다.');
-  }
-});
-
+// 라우트 설정
+app.use('/api', departmentRoutes);
+app.use('/api', clubRoutes);
 // 서버 실행
-app.listen(PORT, () => {
+app.listen(5000, () => {
   console.log(`Server is running on http://localhost:5000`);
 });
