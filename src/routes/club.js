@@ -8,5 +8,6 @@ router.post('/clubMembers', clubController.searchClubMembers);
 router.post('/clubAdvisor', clubController.searchClubAdvisor);
 router.post('/clubModify', clubController.modifyClub);
 router.post('/clubDelete', clubController.deleteClub);
+router.post('/clubAdd', clubController.addClub);
 
 module.exports = router;

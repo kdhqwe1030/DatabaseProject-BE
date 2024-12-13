@@ -351,10 +351,131 @@ const deleteClub = (req, res) => {
     });
   });
 };
+
+const addClub = (req, res) => {
+  const {
+    club_id,
+    department_name,
+    club_name,
+    club_location,
+    founded_date,
+    advisor_name,
+  } = req.body;
+
+  const formattedDate = new Date(founded_date).toISOString().split('T')[0];
+
+  // 1. department_name으로 department_id 조회
+  const getDepartmentId = `
+    SELECT department_id 
+    FROM Department 
+    WHERE department_name = ?`;
+
+  // 2. advisor_name으로 advisor_id 조회
+  const getAdvisorId = `
+    SELECT advisor_id 
+    FROM Advisor 
+    WHERE advisor_name = ?`;
+
+  // 3. Club 테이블 INSERT 쿼리
+  const insertClub = `
+    INSERT INTO Club (
+      club_id, 
+      club_name, 
+      club_location, 
+      founded_date, 
+      Edepartment_id, 
+      Eadvisor_id
+    ) VALUES (?, ?, ?, ?, ?, ?)`;
+
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error('Transaction error:', err);
+      return res.status(500).json({ error: 'Transaction error' });
+    }
+
+    // department_id 조회
+    db.query(getDepartmentId, [department_name], (err, deptResults) => {
+      if (err || !deptResults.length) {
+        return db.rollback(() => {
+          res.status(400).json({ error: 'Invalid department name' });
+        });
+      }
+
+      const department_id = deptResults[0].department_id;
+
+      // advisor_id 조회
+      db.query(getAdvisorId, [advisor_name], (err, advisorResults) => {
+        if (err || !advisorResults.length) {
+          return db.rollback(() => {
+            res.status(400).json({ error: 'Invalid advisor name' });
+          });
+        }
+
+        const advisor_id = advisorResults[0].advisor_id;
+
+        // Club 테이블에 새로운 동아리 추가
+        db.query(
+          insertClub,
+          [
+            club_id,
+            club_name,
+            club_location,
+            formattedDate,
+            department_id,
+            advisor_id,
+          ],
+          (err) => {
+            if (err) {
+              return db.rollback(() => {
+                console.error('Insert error:', err);
+                res.status(500).json({ error: 'Insert failed' });
+              });
+            }
+
+            db.commit((err) => {
+              if (err) {
+                return db.rollback(() => {
+                  res.status(500).json({ error: 'Commit failed' });
+                });
+              }
+
+              // 추가 후 최신 데이터 조회하여 반환
+              const query = `
+                SELECT 
+                  c.club_id,
+                  d.department_name,
+                  c.club_name,
+                  c.club_location,
+                  c.founded_date,
+                  a.advisor_name
+                FROM Club c
+                LEFT JOIN Department d ON c.Edepartment_id = d.department_id
+                LEFT JOIN Advisor a ON c.Eadvisor_id = a.advisor_id
+                ORDER BY c.club_id`;
+
+              db.query(query, (err, results) => {
+                if (err) {
+                  console.error('Error fetching updated data:', err);
+                  res
+                    .status(500)
+                    .json({ error: 'Error fetching updated data' });
+                  return;
+                }
+                res.json(results);
+              });
+            });
+          }
+        );
+      });
+    });
+  });
+};
+
 module.exports = {
   searchClub,
   searchClubMembers,
   searchClubAdvisor,
   modifyClub,
   deleteClub,
+  addClub,
 };
